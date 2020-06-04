@@ -15,7 +15,32 @@ import upo.graph.base.*;
  *
  */
 public class AdjListDirWeight implements WeightedGraph{
+	public class Edge {
+		
+		private int Index;
+		private double Weight;
+		
 
+		public Edge(int index, double weight) {
+			Index = index;
+			Weight = weight;
+		}
+		
+		public int getIndex() {
+			return Index;
+		}
+		public void setIndex(int index) {
+			Index = index;
+		}
+		public double getWeight() {
+			return Weight;
+		}
+		public void setWeight(double weight) {
+			Weight = weight;
+		}
+			
+	}
+	public double[] distanza;
 	private HashMap<Integer,ArrayList<Edge>> graph;
 	private Integer n;
 	private int t;
@@ -100,8 +125,8 @@ public class AdjListDirWeight implements WeightedGraph{
 				if(e.getIndex() == targetVertexIndex)
 					return true;
 			return false;
-		}
-		throw new IllegalArgumentException("il vertice source non esiste");
+		}else
+			throw new IllegalArgumentException("il vertice source non esiste");
 	}
 
 	@Override
@@ -329,18 +354,20 @@ public class AdjListDirWeight implements WeightedGraph{
 	@Override
 	public void setEdgeWeight(int sourceVertexIndex, int targetVertexIndex, double weight)
 			throws IllegalArgumentException, NoSuchElementException {
-		if(!containsVertex(targetVertexIndex))
+		
+		if(!containsVertex(targetVertexIndex) || !containsVertex(sourceVertexIndex))
 			throw new IllegalArgumentException("Il vertice di arrivo non esiste");
+		if(!containsEdge(sourceVertexIndex,targetVertexIndex))
+			throw new NoSuchElementException("L'arco non esiste");
+			
 		if(containsVertex(sourceVertexIndex)){
 			for (Edge e: this.graph.get(sourceVertexIndex)) {
 				if(e.getIndex()==targetVertexIndex) {
 					e.setWeight(weight);
-					return; //se lancio l'eccezione prima rimuovere
 				}
+				
 			}
-		}else {
-			throw new NoSuchElementException("Il vertice di partenza non esiste");
-		}	
+		}
 	}
 
 	@Override
@@ -348,12 +375,69 @@ public class AdjListDirWeight implements WeightedGraph{
 			throws UnsupportedOperationException, IllegalArgumentException {
 		throw new UnsupportedOperationException("Non implementata");
 	}
-
+	
+	/*
+	 * Al posto di questo controllo si potrebbe pensare in fase di inserimento degli archi
+	 * di valorizzare un attributo inizializzato a 0 di default nel costruttore 
+	 * della classe che funzioni da contatore degli archi con peso negativo.
+	 * Se viene inserito un arco con peso negativo count++
+	 * Se viene rimosso un arco con peso negativo count--
+	 * Se viene modificato il peso di un arco che prima era negativo con uno positivo count --
+	 * La funzione hasNegativeWeigth diventerebbe return count==0
+	 */
+	/*
+	 * La funzione serve a verificare che non esistano archi con pesi negativi all'interno del grafo
+	 */
+	private Boolean hasNegativeWeigth() {
+		for(Integer x : this.graph.keySet())
+			for(Edge e: this.graph.get(x))
+				if(e.getWeight()<0)
+					return false;
+		return true;
+	}
 	@Override
 	public WeightedGraph getDijkstraShortestPaths(int startingVertex)
 			throws UnsupportedOperationException, IllegalArgumentException {
-		if(this.containsVertex(startingVertex))
-			throw new UnsupportedOperationException("Ancora da implementare");
+		if(!hasNegativeWeigth())
+			throw new UnsupportedOperationException("Impossibile eseguire Dijkstra con archi negativi");
+		
+		if(this.containsVertex(startingVertex)){
+			//start inizializzazione
+			PriorityQueueDouble pqd = new PriorityQueueDouble();
+			pqd.enqueue(startingVertex, 0);
+			//double[] distanza = new double[n];
+			distanza = new double[n];
+			boolean[] def = new boolean[n];
+			AdjListDirWeight ritorno = new AdjListDirWeight();
+			for(Integer i : this.graph.keySet()) {
+				ritorno.addVertex();
+				def[i] = false;
+				if(containsEdge(startingVertex,i)) {
+					pqd.enqueue(i, getEdgeWeight(startingVertex,i));
+				}
+				else {
+					pqd.enqueue(i, Integer.MAX_VALUE);
+				}
+				distanza[i] = Integer.MAX_VALUE;
+				}
+			distanza[startingVertex] = 0;
+			//end inizializzazione
+			while (!pqd.isEmpty()) {
+				int u = pqd.dequeue();
+				def[u] = true;
+				for(int v : getAdjacent(u)) {
+					if(def[v] == false && distanza[v] > distanza[u] + getEdgeWeight(u,v)) {
+						distanza[v] = distanza[u] + getEdgeWeight(u,v);
+						if(!ritorno.containsEdge(u,v))
+							ritorno.addEdge(u, v);
+						ritorno.setEdgeWeight(u, v, getEdgeWeight(u,v));
+						pqd.modify_priority(v, distanza[v]);
+					}
+				//	actualNode = u;
+				}	
+			}
+			return ritorno;
+		}
 		else 
 			throw new IllegalArgumentException("Vertice di partenza non valido");
 	}
