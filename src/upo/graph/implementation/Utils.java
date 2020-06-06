@@ -6,10 +6,7 @@ import java.util.HashSet;
 import upo.graph.base.VisitForest;
 
 public class Utils {
-	public static int getDate() {
-		return (int) System.currentTimeMillis();
-		
-	}
+	
 	public static int getMax(ArrayList<Integer> list) {
 		int max= Integer.MIN_VALUE;
 		int index = -1;
@@ -40,10 +37,13 @@ public class Utils {
 		for (int i = 0; i<n; i++) {
 			if(a.getColor(i) == VisitForest.Color.BLACK) {
 				ret.setColor(i, VisitForest.Color.BLACK);
-				ret.setParent(i, a.getPartent(i));
-				ret.setDistance(i, a.getDistance(i));
-				ret.setEndTime(i, a.getEndTime(i));
-				ret.setStartTime(i, a.getStartTime(i));
+				if(a.getPartent(i) != null) 
+					ret.setParent(i, a.getPartent(i));
+				if(a.getDistance(i) != null )
+					ret.setDistance(i, a.getDistance(i) );
+					ret.setEndTime(i, a.getEndTime(i));
+					ret.setStartTime(i, a.getStartTime(i) );
+				
 			}				
 		}
 	}
@@ -64,7 +64,6 @@ public class Utils {
 					if(vf.getPartent(i) == root)
 						getNextElement(vf,i, n, s);
 			}
-			//getNextElement(vf,-1,n,s);
 		}
 	}
 	

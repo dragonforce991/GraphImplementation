@@ -2,6 +2,7 @@ package upo.graph.implementation;
 
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.Stack;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.ArrayList;
@@ -20,7 +21,6 @@ public class AdjListDirWeight implements WeightedGraph{
 		private int Index;
 		private double Weight;
 		
-
 		public Edge(int index, double weight) {
 			Index = index;
 			Weight = weight;
@@ -43,22 +43,13 @@ public class AdjListDirWeight implements WeightedGraph{
 	public double[] distanza;
 	private HashMap<Integer,ArrayList<Edge>> graph;
 	private Integer n;
+	int counter;
 	private int t;
 	public AdjListDirWeight () {
 		this.graph = new HashMap<Integer, ArrayList<Edge>>();
 		this.n=0;
 	}
-	public AdjListDirWeight (HashMap<Integer,ArrayList<Edge>> g) {
-		this();
-		for (Integer i: g.keySet()) {
-			this.addVertex();
-			for (Edge e : g.get(i)) {
-				this.addEdge(i, e.getIndex());
-				this.setEdgeWeight(i,e.getIndex(),e.getWeight());
-			}
-		}
-		
-	}
+
 	
 	@Override
 	public int addVertex() {
@@ -75,17 +66,19 @@ public class AdjListDirWeight implements WeightedGraph{
 		//verifico l'esistenza del vertice da eliminare
 		if(this.containsVertex(index)) {
 			//elimino il vertice
-			this.graph.remove(index);
+			
 			//aggiorno tutti i riferimenti al vertice (se il vertice puntato è maggiore dell'indice, lo faccio puntare all'indice precedente
 			// se il vertice puntato è il vertice da eliminare, lo elimino) per ogni vertice
 			for(Integer i : this.graph.keySet()) {
-				this.removeEdge(i, index);
+				if(containsEdge(i,index))
+					this.removeEdge(i, index);
 				ArrayList<Edge> app = this.graph.get(i);
 				for (Edge e : app) {
 					if(e.getIndex()>index)
 						e.setIndex(e.getIndex()-1);
 				}
 			}
+			this.graph.remove(index);
 			//aggiorno gli indici dei vertici
 			for(Integer i = index +1; i< this.n-1; i++ ) {
 				this.graph.put(i-1, this.graph.get(i));
@@ -95,6 +88,8 @@ public class AdjListDirWeight implements WeightedGraph{
 			//decremento la dimensione(adesso l'ultima chiave valida sarà n-2);
 			this.n= n-1;
 				
+		}else {
+			throw new NoSuchElementException("Indice di partenza non esiste");
 		}
 		
 	}
@@ -103,42 +98,41 @@ public class AdjListDirWeight implements WeightedGraph{
 	public void addEdge(int sourceVertexIndex, int targetVertexIndex) throws IllegalArgumentException {
 	
 		ArrayList<Edge> listToUpdate;
-		if(this.graph.containsKey(sourceVertexIndex)) {
+		if(containsVertex(sourceVertexIndex) && containsVertex(targetVertexIndex)) {
 			listToUpdate =this.graph.get(sourceVertexIndex);
-			if (listToUpdate == null)
-				listToUpdate = new ArrayList<Edge>();
-			else {
-				for (Edge e : listToUpdate) {
-					if(e.getIndex()== targetVertexIndex)
-						throw new IllegalArgumentException("Il vertice target è già contenuto nel vertice sorgente");						
-				}
-			}
 			listToUpdate.add(new Edge(targetVertexIndex,WeightedGraph.defaultEdgeWeight));
 			this.graph.put(sourceVertexIndex,listToUpdate);
+		}
+		else {
+			throw new IllegalArgumentException("Il vertice sorgente o di destinazione non è contenuto nel grafo");
 		}
 	}
 
 	@Override
 	public boolean containsEdge(int sourceVertexIndex, int targetVertexIndex) throws IllegalArgumentException {
-		if(this.containsVertex(sourceVertexIndex)) {
+		if(containsVertex(sourceVertexIndex) && containsVertex(targetVertexIndex)) {
 			for (Edge e: this.graph.get(sourceVertexIndex))
 				if(e.getIndex() == targetVertexIndex)
 					return true;
 			return false;
 		}else
-			throw new IllegalArgumentException("il vertice source non esiste");
+			throw new IllegalArgumentException("Il vertice sorgente o di destinazione non è contenuto nel grafo");
 	}
 
 	@Override
 	public void removeEdge(int sourceVertexIndex, int targetVertexIndex)
 			throws IllegalArgumentException, NoSuchElementException {
-		if(this.containsVertex(sourceVertexIndex)) {
+		if(containsVertex(sourceVertexIndex) && containsVertex(targetVertexIndex) ) {
+			if(!containsEdge(sourceVertexIndex,targetVertexIndex))
+				throw new NoSuchElementException("L'Arco non esiste");
 			for (Edge e : this.graph.get(sourceVertexIndex)){
 				if(e.getIndex() == targetVertexIndex) {
 					this.graph.get(sourceVertexIndex).remove(e);
 					break; //se trovo l'elemento evito di continuare il ciclo
 				}
 			}
+		}else {
+			throw new IllegalArgumentException("Il vertice sorgente o di destinazione non è contenuto nel grafo");
 		}
 	}
 
@@ -156,7 +150,7 @@ public class AdjListDirWeight implements WeightedGraph{
 
 	@Override
 	public boolean isAdjacent(int targetVertexIndex, int sourceVertexIndex) throws IllegalArgumentException {
-		if(!containsVertex(sourceVertexIndex) || !containsVertex(sourceVertexIndex) )
+		if(!containsVertex(sourceVertexIndex) || !containsVertex(targetVertexIndex) )
 			throw new IllegalArgumentException("Elemento non presente");
 		return getAdjacent(sourceVertexIndex).contains(targetVertexIndex);
 	}
@@ -231,31 +225,40 @@ public class AdjListDirWeight implements WeightedGraph{
 		else 
 			throw new IllegalArgumentException("Vertice di partenza non valido");
 	}
-
+	
 	@Override
 	public VisitForest getDFSTree(int startingVertex) throws UnsupportedOperationException, IllegalArgumentException {
-		
-		if(this.containsVertex(startingVertex)) {
-			VisitForest ret = new VisitForest(this,VisitForest.VisitType.DFS);
-			ret.setColor(startingVertex, VisitForest.Color.GRAY);		
-			ret.setStartTime(startingVertex, Utils.getDate());
-			for (int v : getAdjacent(startingVertex)) {
-				if (ret.getColor(v) == VisitForest.Color.WHITE) {
-					ret.setParent(v, startingVertex);
-					getDFSTree(v);
-				}
-				ret.setColor(startingVertex, VisitForest.Color.BLACK);
-				ret.setEndTime(startingVertex, Utils.getDate());
-			}
-			return ret;
-		}
-		else 
+		if(!containsVertex(startingVertex)) {
 			throw new IllegalArgumentException("Vertice di partenza non valido");
+		}
+		
+		Stack<Integer> d = new Stack<Integer>();
+		VisitForest ret = new VisitForest(this,VisitForest.VisitType.DFS);
+		ret.setColor(startingVertex, VisitForest.Color.GRAY);		
+		ret.setStartTime(startingVertex, counter);
+		d.push(startingVertex);
+		while(!d.isEmpty()) {
+			int u = d.pop();
+			ret.setStartTime(u, counter);
+			for(Integer v: getAdjacent(u)) {
+				if(ret.getColor(v) == VisitForest.Color.WHITE) {
+					ret.setColor(v, VisitForest.Color.GRAY);
+					ret.setParent(v,u);
+					d.push(v);
+				}
+			}
+			ret.setEndTime(u, counter);
+			ret.setColor(u, VisitForest.Color.BLACK);
+			counter++;
+		}
+		return ret;
+		
+		
 	}
-
 	@Override
 	public VisitForest getDFSTOTForest(int startingVertex)
 			throws UnsupportedOperationException, IllegalArgumentException {
+		counter = 0;
 		VisitForest ret = new VisitForest(this, VisitForest.VisitType.DFS_TOT);
 		if(this.containsVertex(startingVertex)) {
 			for(int i : this.graph.keySet()) {
@@ -263,6 +266,7 @@ public class AdjListDirWeight implements WeightedGraph{
 					Utils.addVisitForest(ret, getDFSTree(i), size());
 				}
 			}
+		counter = 0;
 			return ret;
 		}
 		else 
@@ -329,7 +333,7 @@ public class AdjListDirWeight implements WeightedGraph{
 			scc.add(Utils.getTree(ret, x, n));
 		}
 		return scc;
-		//throw new UnsupportedOperationException("Ancora da implementare");
+		
 	}
 
 	@Override
@@ -340,15 +344,16 @@ public class AdjListDirWeight implements WeightedGraph{
 	@Override
 	public double getEdgeWeight(int sourceVertexIndex, int targetVertexIndex)
 			throws IllegalArgumentException, NoSuchElementException {
-		if(containsVertex(sourceVertexIndex)){
-			for (Edge e: this.graph.get(sourceVertexIndex)) {
-				if(e.getIndex()==targetVertexIndex)
-					return e.getWeight();		
-			}
-			throw new IllegalArgumentException("Da implementare il vertice di arrivo non esiste(forse meglio lanciare l'exception prima, eseguendo una containsVertex?)");
-		}else {
-			throw new NoSuchElementException("Da Implementare il vertice di partenza non esiste");
+		if(!containsVertex(targetVertexIndex) || !containsVertex(sourceVertexIndex))
+			throw new IllegalArgumentException("Il vertice di arrivo o di partenza non esiste");
+		if(!containsEdge(sourceVertexIndex,targetVertexIndex))
+			throw new NoSuchElementException("L'arco non esiste");
+		double d = 0.0;
+		for (Edge e: this.graph.get(sourceVertexIndex)) {
+			if(e.getIndex()==targetVertexIndex)
+				d= e.getWeight();		
 		}	
+		return d; //evito errore in fase di compilazione, non necessario.
 	}
 
 	@Override
@@ -356,18 +361,16 @@ public class AdjListDirWeight implements WeightedGraph{
 			throws IllegalArgumentException, NoSuchElementException {
 		
 		if(!containsVertex(targetVertexIndex) || !containsVertex(sourceVertexIndex))
-			throw new IllegalArgumentException("Il vertice di arrivo non esiste");
+			throw new IllegalArgumentException("Il vertice di arrivo o di partenza non esiste");
 		if(!containsEdge(sourceVertexIndex,targetVertexIndex))
 			throw new NoSuchElementException("L'arco non esiste");
-			
-		if(containsVertex(sourceVertexIndex)){
-			for (Edge e: this.graph.get(sourceVertexIndex)) {
-				if(e.getIndex()==targetVertexIndex) {
-					e.setWeight(weight);
-				}
-				
+		for (Edge e: this.graph.get(sourceVertexIndex)) {
+			if(e.getIndex()==targetVertexIndex) {
+				e.setWeight(weight);
 			}
+			
 		}
+		
 	}
 
 	@Override
