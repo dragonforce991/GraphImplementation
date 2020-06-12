@@ -5,6 +5,8 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import upo.graph.base.*;
+import java.util.HashSet;
+
 
 /**
  * Implementazione mediante <strong>matrice di adiacenza</strong> di un grafo <strong>non orientato non pesato</strong>.
@@ -17,14 +19,14 @@ public class AdjMatrixUndir implements Graph{
 	private ArrayList <ArrayList<Integer>> AdjMatrix;
 	private int nodes;
 
-	public Graph(){
+	public AdjMatrixUndir(){
 		AdjMatrix = new ArrayList<>();
 		nodes = 0;
 	}
 	
 	@Override
 	public int addVertex() {
-		ArrayList<Integer> temp = new ArrayList();
+		ArrayList<Integer> temp = new ArrayList<>();
 		for(int i = 0; i < nodes; i++){
 			temp.add(0);
 
@@ -55,57 +57,54 @@ public class AdjMatrixUndir implements Graph{
 			nodes--;
 		}
 		else{
-			throw new NoSuchElementException();
+			throw new NoSuchElementException("Indice di partenza non esiste");
 		}
 	}
 
 	@Override
 	public void addEdge(int sourceVertexIndex, int targetVertexIndex) throws IllegalArgumentException {
 
-		if(sourceVertexIndex != targetVertexIndex && sourceVertexIndex < nodes){
-			if(targetVertexIndex<nodes){
+		if(containsVertex(sourceVertexIndex) && containsVertex(targetVertexIndex)){
+			
 				AdjMatrix.get(sourceVertexIndex).set(targetVertexIndex,1);
 				AdjMatrix.get(targetVertexIndex).set(sourceVertexIndex,1);
-			}
-			else throw new IllegalArgumentException();
+			
 		}
-		else throw new IllegalArgumentException();
+		else throw new IllegalArgumentException("Il vertice sorgente o di destinazione non è contenuto nel grafo");
 		
 	}
 
 	@Override
 	public boolean containsEdge(int sourceVertexIndex, int targetVertexIndex) throws IllegalArgumentException {
-		if(sourceVertexIndex < nodes){
-			if(targetVertexIndex<nodes){
+		if(containsVertex(sourceVertexIndex) && containsVertex(targetVertexIndex)){
+			
 				return AdjMatrix.get(sourceVertexIndex).get(targetVertexIndex) == 1;
-			}
-			else throw new IllegalArgumentException();
+			
 		}
-		else throw new IllegalArgumentException();
+		else throw new IllegalArgumentException("Vertice non presente");
 		
 	}
 
 	@Override
 	public void removeEdge(int sourceVertexIndex, int targetVertexIndex)
 			throws IllegalArgumentException, NoSuchElementException {
-				if(sourceVertexIndex < nodes){
-					if(targetVertexIndex<nodes){
+				
+					if(containsVertex(sourceVertexIndex) && containsVertex(targetVertexIndex)){
 						if(containsEdge(sourceVertexIndex, targetVertexIndex)){
 							AdjMatrix.get(sourceVertexIndex).set(targetVertexIndex,0);
 							AdjMatrix.get(targetVertexIndex).set(sourceVertexIndex,0);
 						}
-						else throw new NoSuchElementException();
+						else throw new NoSuchElementException("L'Arco non esiste");
 					}
-					else throw new IllegalArgumentException();
-				}
-				else throw new IllegalArgumentException();
+				
+				else throw new IllegalArgumentException("Il vertice sorgente o di destinazione non è contenuto nel grafo");
 		
 	}
 
 	@Override
 	public Set<Integer> getAdjacent(int vertexIndex) throws NoSuchElementException {
 		if(containsVertex(vertexIndex)){
-			Set<Integer> Adj = new Set<Integer>();
+			HashSet<Integer> Adj = new HashSet<Integer>();
 			ArrayList<Integer> retrieve = AdjMatrix.get(vertexIndex);
 			for(int i = 0; i<nodes; i++){
 				if(retrieve.get(i) == 1){
@@ -114,7 +113,7 @@ public class AdjMatrixUndir implements Graph{
 			}
 			return Adj;
 		}
-		throw new NoSuchElementException();
+		throw new NoSuchElementException("L'elemento non esiste");
 	}
 
 	@Override
@@ -146,8 +145,8 @@ public class AdjMatrixUndir implements Graph{
 
 	private boolean Recursive_Visit_Cyclic_check(int index, VisitForest VF){
 		VF.setColor(index, VisitForest.Color.GRAY);
-		for(Integer i : AdjMatrix.get(index)){
-			if(i != 0 && VF.getColor(i) == VisitForest.Color.WHITE ){
+		for(Integer i : getAdjacent(index)){
+			if(VF.getColor(i) == VisitForest.Color.WHITE ){
 				VF.setParent(i,index);
 				if (Recursive_Visit_Cyclic_check(i, VF))
 					return true;
@@ -169,7 +168,7 @@ public class AdjMatrixUndir implements Graph{
 	public VisitForest getBFSTree(int startingVertex) throws UnsupportedOperationException, IllegalArgumentException {
 		if(this.containsVertex(startingVertex)){
 			VisitForest VF = new VisitForest(this,VisitForest.VisitType.BFS);
-			ArrayList<Integers> queue = new ArrayList<Integer>();
+			ArrayList<Integer> queue = new ArrayList<Integer>();
 			queue.add(startingVertex);
 			VF.setColor(startingVertex, VisitForest.Color.GRAY);
 			while(!queue.isEmpty()){
@@ -178,14 +177,14 @@ public class AdjMatrixUndir implements Graph{
 					if(VF.getColor(i) == VisitForest.Color.WHITE){
 						queue.add(i);
 						VF.setParent(i, temp);
-						VF.setColor(i, gray);
+						VF.setColor(i,  VisitForest.Color.GRAY);
 					}
 				}
 				VF.setColor(temp, VisitForest.Color.BLACK);
 			}
 			return VF;
 		}
-		else throw new IllegalArgumentException();
+		else throw new IllegalArgumentException("Vertice di partenza non valido");
 	}
 
 	@Override
@@ -210,7 +209,7 @@ public class AdjMatrixUndir implements Graph{
 			}
 			return VF;
 		}
-		else throw new IllegalArgumentException();
+		else throw new IllegalArgumentException("Vertice di partenza non valido");
 	}
 
 	private int getFirstWhiteAdjacent(int index, VisitForest VF) throws IllegalArgumentException{
@@ -228,7 +227,7 @@ public class AdjMatrixUndir implements Graph{
 	public VisitForest getDFSTOTForest(int startingVertex)
 			throws UnsupportedOperationException, IllegalArgumentException {
 		
-			VisitForest VF = new VisitForert(this,VisitForest.VisitType.DFS_TOT);
+			VisitForest VF = new VisitForest(this,VisitForest.VisitType.DFS_TOT);
 			for(int i = 0; i < size(); i++){
 				if(VF.getColor(i) == VisitForest.Color.WHITE){
 					Utils.addVisitForest(VF, getDFSTree(i), size());
@@ -249,7 +248,7 @@ public class AdjMatrixUndir implements Graph{
 				if(VF.getColor(vertex) == VisitForest.Color.WHITE)
 					Utils.addVisitForest(VF, getDFSTree(vertex), size());
 			}
-			else throw new IllegalArgumentException("Il vertice " + vertex + " non esiste");
+			else throw new IllegalArgumentException("Vertice di partenza non valido");
 		}
 		return VF;
 	}
@@ -266,10 +265,12 @@ public class AdjMatrixUndir implements Graph{
 
 	@Override
 	public Set<Set<Integer>> connectedComponents() throws UnsupportedOperationException {
-		for(int i = 0; i < size(); i++){
-			if()
+		VisitForest VF = getDFSTOTForest(0);
+		Set<Set<Integer>> connected = new HashSet<Set<Integer>>();
+		for(Integer x : VF.getRoots()) {
+			connected.add(Utils.getTree(VF, x, size()));
 		}
-		return null;
+		return connected;
 	}
 
 }

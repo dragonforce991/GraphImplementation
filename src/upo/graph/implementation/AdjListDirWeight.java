@@ -131,7 +131,8 @@ public class AdjListDirWeight implements WeightedGraph{
 					break; //se trovo l'elemento evito di continuare il ciclo
 				}
 			}
-		}else {
+		}
+		else {
 			throw new IllegalArgumentException("Il vertice sorgente o di destinazione non è contenuto nel grafo");
 		}
 	}
