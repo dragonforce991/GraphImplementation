@@ -21,6 +21,8 @@ public class Greedy {
 	 * @param f le frequenze dei caratteri in characters nel dato testo.
 	 * @return una Map che mappa ciascun carattere in una stringa che rappresenta la sua codifica secondo 
 	 * l'algoritmo visto a lezione.
+	 * 
+	 * @author Antonino Massarotti 20035564
 	 */
 	public static class wrapper{
 		Character character;

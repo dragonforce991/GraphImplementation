@@ -2,6 +2,9 @@ package upo.graph.implementation;
 import java.lang.Comparable;
 import java.util.ArrayList;
 import java.util.Collections;
+/**
+ * @author Davide D'Angelo 20035563
+ */
 public class PriorityQueueDouble implements upo.additionalstructures.PriorityQueueDouble {
 
 	public class Node implements Comparable<Node>{

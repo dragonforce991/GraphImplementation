@@ -12,6 +12,9 @@ import org.junit.jupiter.api.Test;
 import upo.graph.base.VisitForest;
 import upo.graph.implementation.AdjListDirWeight;
 
+/*
+ * @Author Davide D'Angelo 20035563
+ */
 public class TestAdjListDirWeight {
     @Test
     public void baseImplementationTest() {	

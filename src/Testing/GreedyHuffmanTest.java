@@ -7,6 +7,10 @@ import org.junit.jupiter.api.Test;
 
 import upo.greedy.Greedy;
 
+
+/*
+ * @Author Antonino Massarotti 20035564
+ */
 public class GreedyHuffmanTest {
 
 	@Test

@@ -5,6 +5,11 @@ import java.util.HashSet;
 
 import upo.graph.base.VisitForest;
 
+
+/**
+ * Metodi di supporto all'implementazione di grafi
+ * @author Davide D'Angelo 20035563
+ */
 public class Utils {
 	
 	public static int getMax(ArrayList<Integer> list) {

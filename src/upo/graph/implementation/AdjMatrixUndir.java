@@ -11,7 +11,7 @@ import java.util.HashSet;
 /**
  * Implementazione mediante <strong>matrice di adiacenza</strong> di un grafo <strong>non orientato non pesato</strong>.
  * 
- * @author Antonino Massarotti Matricola
+ * @author Antonino Massarotti 20035564
  *
  */
 public class AdjMatrixUndir implements Graph{
